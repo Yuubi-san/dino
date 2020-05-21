@@ -65,17 +65,6 @@ public class MainWindow : Gtk.Window {
     }
 
     private void setup_unified() {
-#if _WIN32 // WIN32 seems to not support exporting these symbols
-        {
-            new Dino.Ui.ConversationSelector();
-            new Dino.Ui.ConversationSummary.ConversationView();
-            new Dino.Ui.ChatInput.View();
-            new Dino.Ui.GlobalSearch();
-            new Dino.Ui.ConversationView();
-            new Dino.Ui.SizeRequestBox();
-            new Dino.Ui.SizingBin();
-        }
-#endif
         Builder builder = new Builder.from_resource("/im/dino/Dino/unified_main_content.ui");
         paned = (Hdy.Leaflet) builder.get_object("paned");
         paned.notify["folded"].connect_after(() => update_headerbar());
