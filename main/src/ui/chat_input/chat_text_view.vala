@@ -51,6 +51,10 @@ public class ChatTextView : ScrolledWindow {
         this.get_vscrollbar().get_preferred_height(out vscrollbar_min_height, null);
         this.vadjustment.notify["upper"].connect_after(on_upper_notify);
         text_view.key_press_event.connect(on_text_input_key_press);
+    #if _WIN32
+        text_view.touch_event.connect(on_touch_event);
+        text_view.button_press_event.connect(on_button_press);
+    #endif
 
         Gtk.drag_dest_unset(text_view);
     }
@@ -86,6 +90,55 @@ public class ChatTextView : ScrolledWindow {
         }
         return false;
     }
+
+#if _WIN32
+    private bool on_touch_event(Event event) {
+        stdout.printf("Received event!\n");
+        if (event != null && event.get_event_type() == EventType.TOUCH_END) {
+            var touch_event = event.touch;
+            stdout.printf("Received end touch event!\n");
+        }
+
+        var ret = open_keyboard();
+        stdout.flush();
+        return ret;
+    }
+
+    private bool on_button_press(EventButton event) {
+        stdout.printf("Click event\n");
+        var ret = open_keyboard();
+        stdout.flush();
+        return ret;
+    }
+
+    private bool open_keyboard() {
+        var path = "C:\\Program Files\\Common Files\\microsoft shared\\ink\\TabTip.exe";
+        File file = File.new_for_path(path);
+        if (!file.query_exists()) {
+            stdout.printf("TabTip not found, trying osk.\n");
+            path = GLib.Environment.find_program_in_path("osk.exe");
+            if (path == null || path.length == 0) {
+                stdout.printf("No Virtual Keyboard found :(\n");
+                return false;
+            }
+        }
+
+        try {
+            //path = "'" + path + "'";
+            stdout.printf("Spawning %s.\n", path);
+            //GLib.Process.spawn_command_line_async(path);
+            //Pid child_process_handle;
+            //GLib.Process.spawn_async(null, new string[] { path, "" }, null, 0, null, out child_process_handle);
+            Dino.Util.launch_default_for_uri(path);
+            return true;
+        }
+        catch (SpawnError err) {
+            stdout.printf("Unable to spawn keyboard process. Error: %s\n", err.message);
+        }
+
+        return false;
+    }
+#endif
 }
 
 }
