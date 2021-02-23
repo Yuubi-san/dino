@@ -4505,14 +4505,36 @@ namespace std
 
 WINRT_EXPORT namespace winrt
 {
-#if 0
+    namespace Windows::System
+    {
+        /*  These types are missing from the headers generated from windows 8.1,
+        so even just the interface alone of the following functions was broken.
+        Instead of simply deleting the functions, I added declarations of the
+        missing types (and only declarations -- so that the header doesn't break
+        on windows 10) just in case this all can somehow be useful.
+            The functions was turned into pseudo-templates so as to let them
+        pass the 1st phase of compilation with only declarations of the missing
+        types available.
+        */
+        struct DispatcherQueue;
+        enum class DispatcherQueuePriority;
+    }
+
+    template<
+      typename Q,
+      typename P = std::enable_if_t<
+        std::is_same_v<Q,Windows::System::DispatcherQueue>,
+        Windows::System::DispatcherQueuePriority
+      >,
+      std::enable_if_t<std::is_same_v<P,Windows::System::DispatcherQueuePriority>, int> = 0
+    >
     [[nodiscard]] inline auto resume_foreground(
-        Windows::System::DispatcherQueue const& dispatcher,
-        Windows::System::DispatcherQueuePriority const priority = Windows::System::DispatcherQueuePriority::Normal) noexcept
+        Q const& dispatcher,
+        P const priority = P::Normal) noexcept
     {
         struct awaitable
         {
-            awaitable(Windows::System::DispatcherQueue const& dispatcher, Windows::System::DispatcherQueuePriority const priority) noexcept :
+            awaitable(Q const& dispatcher, P const priority) noexcept :
                 m_dispatcher(dispatcher),
                 m_priority(priority)
             {
@@ -4538,8 +4560,8 @@ WINRT_EXPORT namespace winrt
             }
 
         private:
-            Windows::System::DispatcherQueue const& m_dispatcher;
-            Windows::System::DispatcherQueuePriority const m_priority;
+            Q const& m_dispatcher;
+            P const m_priority;
             bool m_queued{};
         };
 
@@ -4547,11 +4569,14 @@ WINRT_EXPORT namespace winrt
     };
 
 #ifdef WINRT_IMPL_COROUTINES
-    inline auto operator co_await(Windows::System::DispatcherQueue const& dispatcher)
+    template<
+      typename Q,
+      std::enable_if_t<std::is_same_v<Q,Windows::System::DispatcherQueue>, int> = 0
+    >
+    inline auto operator co_await(Q const& dispatcher)
     {
         return resume_foreground(dispatcher);
     }
-#endif
 #endif
 }
 #endif

@@ -27,7 +27,11 @@
 
 #if __has_include(<WindowsNumerics.impl.h>)
 #define WINRT_IMPL_NUMERICS
+#if __has_include(<directxmath.h>)
+// mingw 6.0.0 headers don't have this and it *seems* unused in winrt, but
+// leaving it in just in case:
 #include <directxmath.h>
+#endif
 #endif
 
 #ifdef __cpp_lib_coroutine
@@ -43,7 +47,7 @@ namespace winrt::impl
     using suspend_never = std::suspend_never;
 }
 
-#else
+#elif __has_include(<experimental/coroutine>)
 
 #include <experimental/coroutine>
 
@@ -54,6 +58,19 @@ namespace winrt::impl
 
     using suspend_always = std::experimental::suspend_always;
     using suspend_never = std::experimental::suspend_never;
+}
+
+#else
+
+#include <winrt/yolort_impl/corostub.hpp>
+
+namespace winrt::impl
+{
+    template <typename T = void>
+    using coroutine_handle = corostub::coroutine_handle<T>;
+
+    using suspend_always = corostub::suspend_always;
+    using suspend_never = corostub::suspend_never;
 }
 
 #endif
@@ -8400,7 +8417,7 @@ namespace winrt::impl
             coroutine_handle<> m_handle;
         };
         auto state = std::make_unique<threadpool_resume>(context, handle);
-        submit_threadpool_callback([](void*, void* p)
+        submit_threadpool_callback([](void*, void* p) __stdcall
             {
                 std::unique_ptr<threadpool_resume> state{ static_cast<threadpool_resume*>(p) };
                 resume_apartment_sync(state->m_context, state->m_handle);
@@ -8957,8 +8974,10 @@ WINRT_EXPORT namespace winrt
 
 #ifdef __cpp_lib_coroutine
 namespace std
-#else
+#elif __has_include(<experimental/coroutine>)
 namespace std::experimental
+#else
+namespace corostub
 #endif
 {
     template <typename... Args>
