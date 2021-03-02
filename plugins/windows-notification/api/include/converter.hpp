@@ -39,7 +39,7 @@ glib::unique_ptr<gchar[]> wsview_to_cstr(std::wstring_view wstr);
 [[deprecated("leaky")]] gchar* wsview_to_char(std::wstring_view wstr);
 
 std::wstring sview_to_wstr(std::string_view str);
-inline std::wstring gstr_to_wstr(GString* const str)
+inline std::wstring gstr_to_wstr(const GString* const str)
 {
     return sview_to_wstr({str->str, str->len});
 }
