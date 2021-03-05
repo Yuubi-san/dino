@@ -372,6 +372,7 @@ __declspec(selectany) void(__stdcall* winrt_suspend_handler)(void const* token) 
 __declspec(selectany) void(__stdcall* winrt_resume_handler)(void const* token) noexcept {};
 __declspec(selectany) int32_t(__stdcall* winrt_activation_handler)(void* classId, winrt::guid const& iid, void** factory) noexcept {};
 
+namespace winrt {
 extern "C"
 {
     void* __stdcall LoadLibraryW(wchar_t const* name) noexcept;
@@ -448,6 +449,7 @@ extern "C"
     int32_t __stdcall WINRT_CanUnloadNow() noexcept;
     int32_t __stdcall WINRT_GetActivationFactory(void* classId, void** factory) noexcept;
 }
+}  // namespace winrt
 
 #ifdef _M_HYBRID
 #define WINRT_IMPL_LINK(function, count) __pragma(comment(linker, "/alternatename:#WINRT_IMPL_" #function "@" #count "=#" #function "@" #count))
